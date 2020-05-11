@@ -76,7 +76,7 @@ class Dimension:
 
     def find_chunk(self, x: int, z: int) -> nbtlib.Compound:
         """Given a block `x` and `z`, returns the chunk that contains the block."""
-        return self.region(x >> 9, z >> 9).chunk(x >> 4, z >> 4)
+        return self.region(x >> 9, z >> 9).chunk(x >> 4 & 31, z >> 4 & 31)
 
 
 class SaveFolder:
