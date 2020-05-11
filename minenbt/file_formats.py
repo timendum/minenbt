@@ -61,8 +61,8 @@ class AnvilFile:
                 mcafile.seek(1, 1)  # skip sector count
             for i in range(1024):
                 x = i % 32
-                y = i // 32
-                metadatas[x, y] = _Metadata(offsets[i], read_numeric(INT, mcafile, self.byteorder))
+                z = i // 32
+                metadatas[x, z] = _Metadata(offsets[i], read_numeric(INT, mcafile, self.byteorder))
         self._metadatas = metadatas
 
     def __read_chunks(self) -> None:
@@ -87,20 +87,20 @@ class AnvilFile:
                 chunk = chunk_tag[next(iter(chunk_tag), None)]
                 self.__chunks[coord] = chunk
 
-    def chunk(self, x: int, y: int) -> Optional[Compound]:
+    def chunk(self, x: int, z: int) -> Optional[Compound]:
         """Chunks store the terrain and entities within a 16×256×16 area.
 
-        `x` and `y` refer to position within the region(AnvilFile)
+        `x` and `z` refer to position within the region(AnvilFile)
 
         It returns a Chunks(Compound tag), if available (generated)"""
         if not self.__chunks:
             self.__read_chunks()
-        return self.__chunks[x, y]
+        return self.__chunks[x, z]
 
     def chunks(self) -> Iterator[Tuple[int, int, Compound]]:
         """Iterate all available Chunks.
 
-        It returns `x, y, chunk`. `x` and `y` are relative to the region(AnvinFile)"""
-        for (x, y), metadata in self._metadatas.items():
+        It returns `x, z, chunk`. `x` and `z` are relative to the region(AnvinFile)"""
+        for (x, z), metadata in self._metadatas.items():
             if metadata.is_valid():
-                yield x, y, self.chunk(x, y)
+                yield x, z, self.chunk(x, z)
