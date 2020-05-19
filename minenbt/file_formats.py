@@ -5,6 +5,7 @@ from io import BytesIO
 from pathlib import Path
 from typing import Dict, Iterator, Optional, Tuple, Union
 
+import numpy
 from nbtlib import Compound
 from nbtlib.tag import BYTE, INT, read_numeric
 
@@ -13,6 +14,7 @@ __all__ = ["AnvilFile"]
 
 class _Metadata(namedtuple("_Metadata", ("offset", "timestamp"))):
     """A chunk metadata"""
+
     __slots__ = ()
 
     def is_valid(self) -> bool:
@@ -23,6 +25,61 @@ class _Metadata(namedtuple("_Metadata", ("offset", "timestamp"))):
     def seek(self) -> int:
         """Distance in byte from the beginning of the file."""
         return self.offset * 4096
+
+
+_POW2 = [pow(2, i) for i in range(15, -1, -1)]
+# max = 65535 (uint16)
+
+
+class Section(Compound):
+    """A 16×16×16 section of the chuck"""
+
+    def __init__(self, compound) -> None:
+        super().__init__(dict(compound))
+        if "Palette" not in self:
+            self._palette = None
+            self._states = None
+            return
+        self._palette = [i for i in self["Palette"]]
+        # TODO byteorder
+        nbit = max((len(self._palette) - 1).bit_length(), 4)
+        # use native numpy array
+        bstates = numpy.array(self["BlockStates"].view(numpy.uint8), dtype=numpy.uint8)
+        # convert BlockStates to unsigned integer and then to bits
+        bstates = numpy.unpackbits(bstates)
+        # split array in array for nbit long array
+        splitted = bstates.reshape((-1, nbit))
+        # convert array of bits to int
+        states = (splitted * _POW2[-nbit:]).sum(axis=1)
+        # reshape to xzy
+        self._states = states.reshape(16, 16, 16)
+
+    def block(self, x, y, z) -> Optional[Compound]:
+        if not self._palette or self._states is None:
+            return None
+        return self._palette[self._states[x][y][z]]
+
+    def blocks(self) -> Iterator[Compound]:
+        if self._palette:
+            for (x, y, z), state in numpy.ndenumerate(self._states):
+                yield (x, y, z), self._palette[state]
+
+
+class Chunk(Compound):
+    """Chunks store the terrain and entities within a 16×256×16 area.
+
+    https://minecraft.gamepedia.com/Chunk_format"""
+
+    def __init__(self, compound):
+        super().__init__(dict(compound))
+
+    def section(self, y: int) -> Section:
+        """Return a vertical section of the chunk"""
+        return Section(self["Level"]["Sections"][y])
+
+    def sections(self) -> Iterator[Section]:
+        for section in self["Level"]["Sections"]:
+            yield Section(section)
 
 
 class AnvilFile:
@@ -80,17 +137,12 @@ class AnvilFile:
                 if compression == 2:
                     data = zlib.decompress(mcafile.read(chunk_lenght - 1))
                 else:
-                    raise NotImplementedError(
-                        "Compression = {}".format(compression)
-                    )
+                    raise NotImplementedError("Compression = {}".format(compression))
                 chunk_tag = Compound.parse(BytesIO(data), self.byteorder)
-                chunk = chunk_tag[next(iter(chunk_tag), None)]
-                self.__chunks[coord] = chunk
+                self.__chunks[coord] = Chunk(chunk_tag[""])
 
     def chunk(self, x: int, z: int) -> Optional[Compound]:
-        """Chunks store the terrain and entities within a 16×256×16 area.
-
-        `x` and `z` refer to position within the region(AnvilFile)
+        """`x` and `z` refer to position within the region(AnvilFile)
 
         It returns a Chunks(Compound tag), if available (generated)"""
         if not self.__chunks:
