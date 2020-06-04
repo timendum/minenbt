@@ -1,3 +1,4 @@
+from functools import lru_cache
 from pathlib import Path
 from typing import Iterable, Tuple, Union
 
@@ -10,6 +11,7 @@ __all__ = ["SaveFolder", "Dimension"]
 
 class Dimension:
     """A Dimension (folder) in Minecraft"""
+
     def __init__(self, folder: Union[str, Path]) -> None:
         self._folder = Path(folder)
         if not self._folder.exists():
@@ -26,6 +28,7 @@ class Dimension:
             region_files[int(sx), int(sz)] = mcafile
         self._region_files = region_files
 
+    @lru_cache(maxsize=16)
     def region(self, x: int, z: int) -> AnvilFile:
         """Return the region as an AnvilFile.
 
@@ -81,6 +84,7 @@ class Dimension:
 
 class SaveFolder:
     """A Minecraft Save Folder"""
+
     # https://minecraft.gamepedia.com/Java_Edition_level_format
 
     def __init__(self, folder: Union[str, Path]) -> None:

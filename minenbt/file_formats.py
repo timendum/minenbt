@@ -3,7 +3,7 @@ import zlib
 from collections import namedtuple
 from io import BytesIO
 from pathlib import Path
-from typing import Dict, Iterator, Optional, Tuple, Union
+from typing import Dict, Iterator, Optional, Tuple, Union, Set
 
 import numpy
 from nbtlib import Compound
@@ -37,14 +37,14 @@ class Section(Compound):
     def __init__(self, compound) -> None:
         super().__init__(dict(compound))
         if "Palette" not in self:
-            self._palette = None
-            self._states = None
+            self._palette: Optional[Compound] = None
+            self._states: Optional[numpy.array] = None
             return
         self._palette = [i for i in self["Palette"]]
         # TODO byteorder
         nbit = max((len(self._palette) - 1).bit_length(), 4)
         # use native numpy array
-        bstates = numpy.array(self["BlockStates"].view(numpy.uint8), dtype=numpy.uint8)
+        bstates = numpy.array(numpy.array(self["BlockStates"][::-1]).view(numpy.uint8), dtype=numpy.uint8)
         # convert BlockStates to unsigned integer and then to bits
         bstates = numpy.unpackbits(bstates)
         # split array in array for nbit long array
@@ -52,7 +52,7 @@ class Section(Compound):
         # convert array of bits to int
         states = (splitted * _POW2[-nbit:]).sum(axis=1)
         # reshape to xzy
-        self._states = states.reshape(16, 16, 16)
+        self._states = states[::-1].reshape(16, 16, 16)
 
     def block(self, x, y, z) -> Optional[Compound]:
         if not self._palette or self._states is None:
@@ -63,6 +63,11 @@ class Section(Compound):
         if self._palette:
             for (x, y, z), state in numpy.ndenumerate(self._states):
                 yield (x, y, z), self._palette[state]
+
+    def blocks_avaible(self) -> Set[str]:
+        if not self._palette:
+            return set()
+        return set([n["Name"] for n in self._palette])
 
 
 class Chunk(Compound):
