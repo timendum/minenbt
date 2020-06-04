@@ -44,7 +44,9 @@ class Section(Compound):
         # TODO byteorder
         nbit = max((len(self._palette) - 1).bit_length(), 4)
         # use native numpy array
-        bstates = numpy.array(numpy.array(self["BlockStates"][::-1]).view(numpy.uint8), dtype=numpy.uint8)
+        bstates = numpy.array(
+            numpy.array(self["BlockStates"][::-1]).view(numpy.uint8), dtype=numpy.uint8
+        )
         # convert BlockStates to unsigned integer and then to bits
         bstates = numpy.unpackbits(bstates)
         # split array in array for nbit long array
