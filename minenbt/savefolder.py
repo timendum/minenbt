@@ -95,7 +95,7 @@ class SaveFolder:
             raise ValueError("Path {} is not a folder".format(folder))
         self.__level_dat = None
 
-    def level_dat(self) -> nbtlib.Compound:
+    def level_dat(self) -> nbtlib.File:
         """Returns the leve.dat file as a NBT Compound tag."""
         if not self.__level_dat:
             self.__level_dat = nbtlib.load(self._folder / "level.dat")
