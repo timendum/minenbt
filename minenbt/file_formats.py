@@ -3,7 +3,7 @@ import zlib
 from collections import namedtuple
 from io import BytesIO
 from pathlib import Path
-from typing import Dict, Iterator, Optional, Tuple, Union, Set
+from typing import Dict, Iterator, Optional, Set, Tuple, Union
 
 import numpy
 from nbtlib import Compound
@@ -59,12 +59,12 @@ class Section(Compound):
     def block(self, x, y, z) -> Optional[Compound]:
         if not self._palette or self._states is None:
             return None
-        return self._palette[self._states[x][y][z]]
+        return self._palette[self._states[y][x][z]]
 
     def blocks(self) -> Iterator[Compound]:
         if self._palette:
-            for (x, y, z), state in numpy.ndenumerate(self._states):
-                yield (x, y, z), self._palette[state]
+            for (y, x, z), state in numpy.ndenumerate(self._states):
+                yield (y, x, z), self._palette[state]
 
     def blocks_avaible(self) -> Set[str]:
         if not self._palette:
@@ -80,13 +80,20 @@ class Chunk(Compound):
     def __init__(self, compound):
         super().__init__(dict(compound))
 
-    def section(self, y: int) -> Section:
-        """Return a vertical section of the chunk"""
-        return Section(self["Level"]["Sections"][y])
+    def section(self, i: int) -> Optional[Section]:
+        """Return a vertical section of the chunk, if available"""
+        if i in self["Level"]["Sections"]:
+            return Section(self["Level"]["Sections"][i])
+        return None
 
     def sections(self) -> Iterator[Section]:
+        """Iterate all sections in the chunk"""
         for section in self["Level"]["Sections"]:
             yield Section(section)
+
+    def find_section(self, y: int) -> Optional[Section]:
+        """Return the section with given y, if available"""
+        return self.section((y >> 4) + 1)
 
 
 class AnvilFile:
@@ -107,7 +114,7 @@ class AnvilFile:
         if not self._filepath.is_file():
             raise ValueError("Path {} is not a file".format(filepath))
         self.__init_metadata()
-        self.__chunks: Dict[Tuple[int, int], Optional[Compound]] = {}
+        self.__chunks: Dict[Tuple[int, int], Optional[Chunk]] = {}
 
     def __str__(self) -> str:
         return "Anvil({!r})".format(self._filepath.name)
@@ -148,7 +155,7 @@ class AnvilFile:
                 chunk_tag = Compound.parse(BytesIO(data), self.byteorder)
                 self.__chunks[coord] = Chunk(chunk_tag[""])
 
-    def chunk(self, x: int, z: int) -> Optional[Compound]:
+    def chunk(self, x: int, z: int) -> Optional[Chunk]:
         """`x` and `z` refer to position within the region(AnvilFile)
 
         It returns a Chunks(Compound tag), if available (generated)"""
@@ -156,7 +163,7 @@ class AnvilFile:
             self.__read_chunks()
         return self.__chunks[x, z]
 
-    def chunks(self) -> Iterator[Tuple[int, int, Compound]]:
+    def chunks(self) -> Iterator[Tuple[int, int, Chunk]]:
         """Iterate all available Chunks.
 
         It returns `x, z, chunk`. `x` and `z` are relative to the region(AnvinFile)"""
