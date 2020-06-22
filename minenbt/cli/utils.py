@@ -1,11 +1,23 @@
+import datetime as dt
+from pathlib import Path
+from shutil import move
 from sys import exit
 from typing import Iterator, Optional, Tuple
 
 from minenbt import Dimension, SaveFolder
 from minenbt.utils import Coord, near_chunks
-from nbtlib import Compound
+from nbtlib import Compound, File as ntbFile
 
-__all__ = ["iterate_chunks", "get_world", "Center", "get_pos", "dimension_player", "pos_player"]
+__all__ = [
+    "iterate_chunks",
+    "get_world",
+    "Center",
+    "get_pos",
+    "dimension_player",
+    "pos_player",
+    "get_player",
+    "backup_write",
+]
 
 
 def Center(s: str) -> Coord:
@@ -78,3 +90,32 @@ def get_pos(
         return None
     print("Player at {:0.0f},{:0.0f},{:0.0f}".format(*pos))
     return (int(pos[0]), int(pos[1]), int(pos[2]))
+
+
+def get_player(save_folder: SaveFolder, uuid: Optional[str]):
+    """Get a player data.
+
+    Return (level.dat file, playerdata file).  
+    If uuid is None or uuid == Single player, return level.dat.  
+    Else return playerdata file."""
+    if not uuid:
+        dat = save_folder.level_dat()
+        if "Player" not in dat.root["Data"]:
+            print("The Save is not for single player.")
+            exit(96)
+        return dat, None
+    player = save_folder.player(uuid)
+    if hasattr(player, "filename"):
+        # ntblib.File, so from playerdata
+        return None, player
+    return save_folder.level_dat(), None
+
+
+def backup_write(nbtfile: ntbFile):
+    """Backup and save a ntblib.File."""
+    path = Path(nbtfile.filename)
+    timestamp = dt.datetime.now().strftime("%Y-%m-%d_%H-%M-%S-%f")
+    new_path = Path(str(path.absolute()) + "." + timestamp)
+    move(path, new_path)
+    nbtfile.save()
+    return new_path

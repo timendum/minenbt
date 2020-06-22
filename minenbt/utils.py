@@ -1,8 +1,11 @@
 import bisect
 from math import floor, pow as mpow, sqrt
 from typing import List, NamedTuple, Tuple
+from uuid import UUID
 
-__all__ = ["Coord", "near_regions", "near_chunks"]
+import numpy as np
+
+__all__ = ["Coord", "near_regions", "near_chunks", "parse_uuid"]
 
 
 class Coord(NamedTuple):
@@ -69,3 +72,20 @@ def near_chunks(x, z, distance) -> List[Coord]:
     results = sorted(results, key=lambda k: k[1])
     results = results[: bisect.bisect_right([r[1] for r in results], distance)]
     return [r[0] for r in results]
+
+
+def parse_uuid(compound, prefix="UUID") -> UUID:
+    """Return an uuid.UUID from a compund tag.
+
+    See https://minecraft.gamepedia.com/UUID"""
+    if prefix + "Most" in compound:
+        # Until MC 1.15.2
+        ints = [compound[prefix + "Most"], compound[prefix + "Least"]]
+        uints = [np.int64(i).astype(np.uint64).item() for i in ints]
+        return UUID(int=((uints[0] << 64) + uints[1]))
+    # From MC 1.16
+    ints = compound[prefix]
+    # convert so unsigned
+    uints = [np.int32(i).astype(np.uint32).item() for i in ints]
+    # build 128 bit integer
+    return UUID(int=(uints[0] << 96) + (uints[1] << 64) + (uints[2] << 32) + uints[3])
