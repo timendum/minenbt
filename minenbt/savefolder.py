@@ -1,10 +1,13 @@
 from functools import lru_cache
 from pathlib import Path
 from typing import Iterable, Tuple, Union
+from uuid import UUID
 
+import numpy as np
 import nbtlib
 
 from . import AnvilFile
+from .utils import parse_uuid
 
 __all__ = ["SaveFolder", "Dimension"]
 
@@ -118,3 +121,18 @@ class SaveFolder:
     def end(self) -> Dimension:
         """Return the End dimension."""
         return Dimension((self._folder / "DIM1").absolute())
+
+    def players(self) -> Iterable[str]:
+        """Return a list of player's UUIDs."""
+        return [p.stem for p in (self._folder / "playerdata").glob("*.dat")]
+
+    def player(self, uuid: str) -> nbtlib.Compound:
+        """Load a player from `level.dat` or `playerdata` folder."""
+        dat = self.level_dat()
+        sp_uuid = None
+        if "Player" in dat.root["Data"]:
+            sp_data = dat.root["Data"]["Player"]
+            sp_uuid = parse_uuid(sp_data, "UUID")
+        if uuid == str(sp_uuid):
+            return dat.root["Data"]["Player"]
+        return nbtlib.load(self._folder / "playerdata" / "{}.dat".format(uuid))

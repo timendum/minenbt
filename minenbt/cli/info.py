@@ -24,4 +24,7 @@ def main(save_folder: minenbt.SaveFolder) -> int:
     pos = pos_player(save_folder)
     if pos:
         print("Player at ({:0.0f}, {:0.0f}, {:0.0f})".format(*pos))
+    print("Players UUIDs:")
+    for p in save_folder.players():
+        print('- {}'.format(p))
     return 0
