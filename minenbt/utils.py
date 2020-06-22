@@ -1,7 +1,5 @@
 import bisect
-from math import floor
-from math import pow as mpow
-from math import sqrt
+from math import floor, pow as mpow, sqrt
 from typing import List, NamedTuple, Tuple
 
 __all__ = ["Coord", "near_regions", "near_chunks"]
