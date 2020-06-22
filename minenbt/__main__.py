@@ -8,6 +8,10 @@ def __add_dimension(parser):
     parser.add_argument("-d", "--dimension", choices=["overworld", "nether", "end"])
 
 
+def __add_uuid(parser):
+    parser.add_argument("-i", "--uuid", help="UUID of the player (default: Signle player")
+
+
 def __add_center_distance(parser):
     parser.add_argument(
         "-c",
@@ -39,6 +43,7 @@ def main():
     add_parser.set_defaults(func=cli.add_to_inventory.main)
     add_parser.add_argument("item", help="Item id (es: minecraft:arrow)")
     add_parser.add_argument("-c", "--count", help="How many items", default=1)
+    __add_uuid(add_parser)
     # containers
     containers_parser = subparsers.add_parser(
         "containers", help=cli.containers_list.__doc__.strip()
@@ -71,6 +76,7 @@ def main():
     block_parser.add_argument("block_id", help="Block ID")
     # repair
     repair_parser = subparsers.add_parser("repair", help=cli.repair.__doc__.strip())
+    __add_uuid(repair_parser)
     repair_parser.set_defaults(func=cli.repair.main)
     # parse
     args = parser.parse_args()

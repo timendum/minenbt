@@ -2,25 +2,27 @@
 Repair all items in the single player's inventory.
 """
 
-from pathlib import Path
-
 import minenbt
 import nbtlib
 
+from .utils import get_player, backup_write
 
-def main(save_folder: minenbt.SaveFolder) -> int:
-    dat = save_folder.level_dat()
-    if "Player" not in dat.root["Data"]:
-        print("The Save is not for single player.")
-        return 20
-    inventory = dat.root["Data"]["Player"]["Inventory"]
+
+def main(save_folder: minenbt.SaveFolder, uuid) -> int:
+    level_dat, playerdata = get_player(save_folder, uuid)
+    if level_dat:
+        inventory = level_dat.root["Data"]["Player"]["Inventory"]
+    else:
+        inventory = playerdata.root["Inventory"]
     for item in inventory:
         if "tag" not in item:
             continue
         if "Damage" not in item["tag"]:
             continue
         item["tag"]["Damage"] = min(item["tag"]["Damage"], nbtlib.Int(1))
-    new_file = Path("level.dat_new")
-    dat.save(new_file)
-    print("Saved as {}".format(new_file.absolute()))
+    if level_dat:
+        new_file = backup_write(level_dat)
+    else:
+        new_file = backup_write(playerdata)
+    print("Backup at {}".format(new_file))
     return 0
