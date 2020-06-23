@@ -1,2 +1,2 @@
-nbtlib==1.6.5
+nbtlib==1.7.0
 numpy==1.19.0
