@@ -1,9 +1,7 @@
 from functools import lru_cache
 from pathlib import Path
 from typing import Iterable, Tuple, Union
-from uuid import UUID
 
-import numpy as np
 import nbtlib
 
 from . import AnvilFile
