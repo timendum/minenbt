@@ -44,7 +44,12 @@ def dimension_player(save_folder: SaveFolder) -> Optional[str]:
     dat = save_folder.level_dat()
     if "Player" not in dat.root["Data"]:
         return None
-    return {-1: "nether", 0: "overworld", 1: "end"}[dat.root["Data"]["Player"]["Dimension"]]
+    nbt_dimension = dat.root["Data"]["Player"]["Dimension"]
+    if isinstance(nbt_dimension, int):
+        # Until 1.15.2
+        return {-1: "nether", 0: "overworld", 1: "end"}[nbt_dimension]
+    # From 1.16
+    return nbt_dimension.split(":")[1]
 
 
 def iterate_chunks(

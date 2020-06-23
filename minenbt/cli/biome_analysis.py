@@ -18,7 +18,7 @@ BIOMES = {
     5: "Taiga",
     6: "Swamp",
     7: "River",
-    8: "Nether",
+    8: "Nether Wastes",
     9: "The End",
     10: "Frozen Ocean",
     11: "Frozen River",
@@ -85,6 +85,10 @@ BIOMES = {
     167: "Modified Badlands Plateau",
     168: "Bamboo Jungle",
     169: "Bamboo Jungle Hills",
+    170: "Soul Sand Valley‌",
+    171: "Crimson Forest",
+    172: "Warped Forest",
+    173: "Basalt Deltas",
 }
 
 
