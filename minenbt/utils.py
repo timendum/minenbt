@@ -60,14 +60,13 @@ def near_chunks(x, z, distance) -> List[Coord]:
     """Return an list of Coord, from nearest to farthest, one Coord for every chunck.
     Every returned Coord has a distance from `(x,z)` lesser than `distance`."""
     start = Coord(x, 0, z)
-    block_delta = start.block()
     results = []
     region_range = floor(distance / 512) + 1
     for rx in range(-region_range, region_range + 1):
         for rz in range(-region_range, region_range + 1):
-            for cx in range(0, 32):
-                for cz in range(0, 32):
-                    point = Coord.compose((rx, rz), (cx, cz), 0, block_delta)
+            for cx in range(0, 16):
+                for cz in range(0, 16):
+                    point = Coord.compose((rx, rz), (cx, cz), 0)
                     results.append((point, start.distance(point)))
     results = sorted(results, key=lambda k: k[1])
     results = results[: bisect.bisect_right([r[1] for r in results], distance)]
