@@ -82,7 +82,7 @@ class Chunk(Compound):
 
     def section(self, i: int) -> Optional[Section]:
         """Return a vertical section of the chunk, if available"""
-        if i in self["Level"]["Sections"]:
+        if i < len(self["Level"]["Sections"]):
             return Section(self["Level"]["Sections"][i])
         return None
 
@@ -93,7 +93,7 @@ class Chunk(Compound):
 
     def find_section(self, y: int) -> Optional[Section]:
         """Return the section with given y, if available"""
-        return self.section((y >> 4) + 1)
+        return self.section(y >> 4)
 
 
 class AnvilFile:
