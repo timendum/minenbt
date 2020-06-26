@@ -49,7 +49,7 @@ class Section(Compound):
             for (y, z, x), state in numpy.ndenumerate(self._states):
                 yield (x, y, z), self._palette[state]
 
-    def blocks_avaible(self) -> Set[str]:
+    def blocks_available(self) -> Set[str]:
         if not self._palette:
             return set()
         return set([n["Name"] for n in self._palette])
