@@ -2,12 +2,11 @@
 Add one item to the single player inventory.
 """
 
-from pathlib import Path
-
-import minenbt
 import nbtlib
 
-from .utils import get_player, backup_write
+import minenbt
+
+from .utils import backup_write, get_player
 
 # From https://minecraft.gamepedia.com/File:Items_slot_number.png
 _SLOTS = set(range(9, 36))

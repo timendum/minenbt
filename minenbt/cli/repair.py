@@ -2,10 +2,11 @@
 Repair all items in the single player's inventory.
 """
 
-import minenbt
 import nbtlib
 
-from .utils import get_player, backup_write
+import minenbt
+
+from .utils import backup_write, get_player
 
 
 def main(save_folder: minenbt.SaveFolder, uuid) -> int:

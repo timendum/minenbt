@@ -4,9 +4,10 @@ from shutil import move
 from sys import exit
 from typing import Iterator, Optional, Tuple
 
+from nbtlib import Compound, File as ntbFile
+
 from minenbt import Dimension, SaveFolder
 from minenbt.utils import Coord, near_chunks
-from nbtlib import Compound, File as ntbFile
 
 __all__ = [
     "iterate_chunks",
