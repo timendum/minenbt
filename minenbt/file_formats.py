@@ -2,6 +2,7 @@
 import zlib
 from collections import namedtuple
 from io import BytesIO
+from math import ceil
 from pathlib import Path
 from typing import Dict, Iterator, Optional, Set, Tuple, Union
 
@@ -27,49 +28,62 @@ class _Metadata(namedtuple("_Metadata", ("offset", "timestamp"))):
         return self.offset * 4096
 
 
-_POW2 = [pow(2, i) for i in range(15, -1, -1)]
-# max = 65535 (uint16)
-
-
 class Section(Compound):
-    """A 16×16×16 section of the chuck"""
+    """A 16×16×16 section of the chuck for DataVersion < 2529."""
 
     def __init__(self, compound) -> None:
         super().__init__(dict(compound))
+        self._states: Optional[numpy.array] = None
         if "Palette" not in self:
             self._palette: Optional[Compound] = None
-            self._states: Optional[numpy.array] = None
             return
         self._palette = [i for i in self["Palette"]]
-        # TODO byteorder
-        nbit = max((len(self._palette) - 1).bit_length(), 4)
-        # use native numpy array
-        bstates = numpy.array(
-            numpy.array(self["BlockStates"][::-1]).view(numpy.uint8), dtype=numpy.uint8
-        )
-        # convert BlockStates to unsigned integer and then to bits
-        bstates = numpy.unpackbits(bstates)
-        # split array in array for nbit long array
-        splitted = bstates.reshape((-1, nbit))
-        # convert array of bits to int
-        states = (splitted * _POW2[-nbit:]).sum(axis=1)
-        # reshape to xzy
-        self._states = states[::-1].reshape(16, 16, 16)
 
     def block(self, x, y, z) -> Optional[Compound]:
         if not self._palette or self._states is None:
             return None
-        return self._palette[self._states[y][x][z]]
+        return self._palette[self._states[y][z][x]]
 
     def blocks(self) -> Iterator[Compound]:
         if self._palette:
-            for (y, x, z), state in numpy.ndenumerate(self._states):
-                yield (y, x, z), self._palette[state]
+            for (y, z, x), state in numpy.ndenumerate(self._states):
+                yield (x, y, z), self._palette[state]
 
     def blocks_avaible(self) -> Set[str]:
         if not self._palette:
             return set()
         return set([n["Name"] for n in self._palette])
+
+
+class Section116(Section):
+    """A 16×16×16 section of the chuck for DataVersion >= 2529.
+
+    From Java Edition 20w17a (1.16 snapshot 2)."""
+
+    def __init__(self, compound) -> None:
+        super().__init__(compound)
+        if not self._palette:
+            return
+        # TODO byteorder
+        nbit = max((len(self._palette) - 1).bit_length(), 4)
+        # check dimension
+        if len(self["BlockStates"]) != ceil(16 * 16 * 16 / (64 // nbit)):
+            raise ValueError(
+                "There are {} 64-bit fields but {} states".format(
+                    len(self["BlockStates"]), len(self._palette)
+                )
+            )
+        unused = 64 % nbit
+        blength = 64 - unused
+        mask = pow(2, nbit) - 1
+        states = []
+        for longstate in self["BlockStates"]:
+            # convert to unsigned
+            longstate = longstate & 0xFFFFFFFFFFFFFFFF
+            for i in range(0, blength, nbit):
+                states.append(longstate & mask)
+                longstate = longstate >> nbit
+        self._states = numpy.reshape(states[: 16 * 16 * 16], [16, 16, 16]).tolist()
 
 
 class Chunk(Compound):
@@ -82,14 +96,12 @@ class Chunk(Compound):
 
     def section(self, i: int) -> Optional[Section]:
         """Return a vertical section of the chunk, if available"""
-        if i < len(self["Level"]["Sections"]):
-            return Section(self["Level"]["Sections"][i])
-        return None
+        return Section116(self["Level"]["Sections"][i + 1])
 
     def sections(self) -> Iterator[Section]:
         """Iterate all sections in the chunk"""
         for section in self["Level"]["Sections"]:
-            yield Section(section)
+            yield Section116(section)
 
     def find_section(self, y: int) -> Optional[Section]:
         """Return the section with given y, if available"""
