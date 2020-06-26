@@ -28,6 +28,5 @@ def main(save_folder: minenbt.SaveFolder, dimension, center, distance, block_id)
                 if cpos:
                     sdist = " - {:.0f} blocks away".format(c.distance(cpos))
                 if block_id == block["Name"]:
-                    print("Found near {c}{}".format(sdist, c=c))
-                    break
+                    print("Found at {c}{}".format(sdist, c=c))
     return 0
