@@ -82,6 +82,9 @@ class Dimension:
         """Given a block `x` and `z`, returns the chunk that contains the block."""
         return self.region(x >> 9, z >> 9).chunk(x >> 4 & 31, z >> 4 & 31)
 
+    def __repr__(self) -> str:
+        return "Dimension('{}')".format(self._folder.absolute())
+
 
 class SaveFolder:
     """A Minecraft Save Folder"""
