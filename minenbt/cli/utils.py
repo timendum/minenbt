@@ -70,7 +70,7 @@ def iterate_chunks(
                 pass
 
 
-def get_world(save_folder: SaveFolder, dimension: Optional[str]):
+def get_world(save_folder: SaveFolder, dimension: Optional[str]) -> Dimension:
     """save folder + dimension name -> World"""
     if not dimension:
         dimension = dimension_player(save_folder)
@@ -98,7 +98,9 @@ def get_pos(
     return (int(pos[0]), int(pos[1]), int(pos[2]))
 
 
-def get_player(save_folder: SaveFolder, uuid: Optional[str]):
+def get_player(
+    save_folder: SaveFolder, uuid: Optional[str]
+) -> Tuple[Optional[Compound], Optional[Compound]]:
     """Get a player data.
 
     Return (level.dat file, playerdata file).  
@@ -117,7 +119,7 @@ def get_player(save_folder: SaveFolder, uuid: Optional[str]):
     return save_folder.level_dat(), None
 
 
-def backup_write(nbtfile: ntbFile):
+def backup_write(nbtfile: ntbFile) -> Path:
     """Backup and save a ntblib.File."""
     path = Path(nbtfile.filename)
     timestamp = dt.datetime.now().strftime("%Y-%m-%d_%H-%M-%S-%f")
