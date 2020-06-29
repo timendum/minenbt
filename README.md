@@ -45,7 +45,7 @@ Count the number of biomes in a dimension.
 Add one item to the single player inventory.
 - `containers`  
 Prints all containers
-- `mobs`
+- `mobs`  
 Prints all mobs in the Overworld
 - `structures`  
 Prints all structures
