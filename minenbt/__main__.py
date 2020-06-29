@@ -12,13 +12,17 @@ def __add_uuid(parser):
     parser.add_argument("-i", "--uuid", help="UUID of the player (default: Signle player")
 
 
-def __add_center_distance(parser):
+def __add_center(parser):
     parser.add_argument(
         "-c",
         "--center",
         type=cli.utils.Center,
         help="Print first results nearer from this position (Default=single player position)",
     )
+
+
+def __add_center_distance(parser):
+    __add_center(parser)
     parser.add_argument(
         "-l",
         "--distance",
@@ -78,6 +82,14 @@ def main():
     repair_parser = subparsers.add_parser("repair", help=cli.repair.__doc__.strip())
     __add_uuid(repair_parser)
     repair_parser.set_defaults(func=cli.repair.main)
+    # repair
+    dump_parser = subparsers.add_parser("dump", help=cli.dump.__doc__.strip())
+    dump_parser.set_defaults(func=cli.dump.main)
+    __add_dimension(dump_parser)
+    __add_center(dump_parser)
+    dump_parser.add_argument(
+        "ltype", help="Location type", choices=["region", "chunk", "sector", "block"]
+    )
     # parse
     args = parser.parse_args()
     if "func" in args:
