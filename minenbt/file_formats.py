@@ -54,6 +54,14 @@ class Section(Compound):
             return set()
         return set([n["Name"] for n in self._palette])
 
+    def find_block(self, x, y, z) -> Optional[Compound]:
+        if not self._palette or self._states is None:
+            return None
+        x = x & 15
+        y = y & 15
+        z = z & 15
+        return self._palette[self._states[y][z][x]]
+
 
 _POW2 = [pow(2, i) for i in range(15, -1, -1)]
 # max = 65535 (uint16)
@@ -219,3 +227,7 @@ class AnvilFile:
         for (x, z), metadata in self._metadatas.items():
             if metadata.is_valid():
                 yield x, z, self.chunk(x, z)
+
+    def find_chunk(self, x, z) -> Optional[Chunk]:
+        """Given a block `x` and `z`, returns the chunk that contains the block."""
+        return self.chunk(x >> 4 & 31, z >> 4 & 31)
