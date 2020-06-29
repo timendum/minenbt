@@ -55,6 +55,35 @@ class Section(Compound):
         return set([n["Name"] for n in self._palette])
 
 
+_POW2 = [pow(2, i) for i in range(15, -1, -1)]
+# max = 65535 (uint16)
+
+
+class Section113(Section):
+    """A 16×16×16 section of the chuck for DataVersion >= 2529.
+
+    From Java Edition 1.13."""
+
+    def __init__(self, compound) -> None:
+        super().__init__(compound)
+        if not self._palette:
+            return
+        # TODO byteorder
+        nbit = max((len(self._palette) - 1).bit_length(), 4)
+        # use native numpy array
+        bstates = numpy.array(
+            numpy.array(self["BlockStates"][::-1]).view(numpy.uint8), dtype=numpy.uint8
+        )
+        # convert BlockStates to unsigned integer and then to bits
+        bstates = numpy.unpackbits(bstates)
+        # split array in array for nbit long array
+        splitted = bstates.reshape((-1, nbit))
+        # convert array of bits to int
+        states = (splitted * _POW2[-nbit:]).sum(axis=1)
+        # reshape to xzy
+        self._states = states[::-1].reshape(16, 16, 16)
+
+
 class Section116(Section):
     """A 16×16×16 section of the chuck for DataVersion >= 2529.
 
@@ -96,12 +125,20 @@ class Chunk(Compound):
 
     def section(self, i: int) -> Optional[Section]:
         """Return a vertical section of the chunk, if available"""
-        return Section116(self["Level"]["Sections"][i + 1])
+        if self["DataVersion"] >= 2529:
+            # https://minecraft.gamepedia.com/Java_Edition_20w17a
+            return Section116(self["Level"]["Sections"][i + 1])
+        if self["DataVersion"] >= 1631:
+            return Section113(self["Level"]["Sections"][i + 1])
+        else:
+            raise ValueError("DataVersion {} not supported".format(self["DataVersion"]))
 
     def sections(self) -> Iterator[Section]:
         """Iterate all sections in the chunk"""
-        for section in self["Level"]["Sections"]:
-            yield Section116(section)
+        for i in range(len(self["Level"]["Sections"]) - 1):
+            section = self.section(i)
+            if section:
+                yield section
 
     def find_section(self, y: int) -> Optional[Section]:
         """Return the section with given y, if available"""
