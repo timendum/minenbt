@@ -69,7 +69,7 @@ def near_chunks(x, z, distance) -> List[Coord]:
         for rz in range(-region_range, region_range + 1):
             for cx in range(0, 16):
                 for cz in range(0, 16):
-                    point = Coord.compose((rx+srx, rz+srz), (cx+scx, cz+scz), 0)
+                    point = Coord.compose((rx + srx, rz + srz), (cx + scx, cz + scz), 0)
                     results.append((point, start_chunk.distance(point)))
     results = sorted(results, key=lambda k: k[1])
     nbisect = bisect.bisect_right([r[1] for r in results], distance)

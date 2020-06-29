@@ -86,7 +86,7 @@ def get_pos(
     save_folder: SaveFolder, dimension: Optional[str], center=Optional[Coord]
 ) -> Optional[Tuple[int, int, int]]:
     if center:
-        return center.x, center.y, center.x
+        return center
     save_dimension = dimension_player(save_folder)
     if save_dimension and dimension and save_dimension != dimension:
         print("Center not provided, but provided dimension is different from player dimension")
