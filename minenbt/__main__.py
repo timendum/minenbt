@@ -83,12 +83,15 @@ def main():
     __add_uuid(repair_parser)
     repair_parser.set_defaults(func=cli.repair.main)
     # repair
-    dump_parser = subparsers.add_parser("dump", help=cli.dump.__doc__.strip())
-    dump_parser.set_defaults(func=cli.dump.main)
-    __add_dimension(dump_parser)
-    __add_center(dump_parser)
-    dump_parser.add_argument(
-        "ltype", help="Location type", choices=["region", "chunk", "sector", "block"]
+    dumpr_parser = subparsers.add_parser("dumpr", help=cli.dumpr.__doc__.strip())
+    dumpr_parser.set_defaults(func=cli.dumpr.main)
+    __add_dimension(dumpr_parser)
+    __add_center(dumpr_parser)
+    dumpr_parser.add_argument(
+        "ltype", help="Location type", choices=["chunk", "sector", "block"]
+    )
+    dumpr_parser.add_argument(
+        "-p", "--pretty-print", action="store_true", help="Pretty print output."
     )
     # parse
     args = parser.parse_args()
