@@ -9,7 +9,7 @@ def __add_dimension(parser):
 
 
 def __add_uuid(parser):
-    parser.add_argument("-i", "--uuid", help="UUID of the player (default: Signle player")
+    parser.add_argument("-i", "--uuid", help="UUID of the player (default: Signle player)")
 
 
 def __add_center(parser):
@@ -82,15 +82,21 @@ def main():
     repair_parser = subparsers.add_parser("repair", help=cli.repair.__doc__.strip())
     __add_uuid(repair_parser)
     repair_parser.set_defaults(func=cli.repair.main)
-    # repair
+    # dumpr
     dumpr_parser = subparsers.add_parser("dumpr", help=cli.dumpr.__doc__.strip())
     dumpr_parser.set_defaults(func=cli.dumpr.main)
     __add_dimension(dumpr_parser)
     __add_center(dumpr_parser)
+    dumpr_parser.add_argument("ltype", help="Location type", choices=["chunk", "sector", "block"])
     dumpr_parser.add_argument(
-        "ltype", help="Location type", choices=["chunk", "sector", "block"]
+        "-p", "--pretty-print", action="store_true", help="Pretty print output."
     )
-    dumpr_parser.add_argument(
+    # dumpr
+    dumpl_parser = subparsers.add_parser("dumpl", help=cli.dumpl.__doc__.strip())
+    dumpl_parser.set_defaults(func=cli.dumpl.main)
+    __add_uuid(dumpl_parser)
+    dumpl_parser.add_argument("etype", help="Entity type", choices=["level", "player", "inventory"])
+    dumpl_parser.add_argument(
         "-p", "--pretty-print", action="store_true", help="Pretty print output."
     )
     # parse
