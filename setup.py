@@ -4,8 +4,12 @@
 #
 # If everything works well you should find a subdirectory in the build
 # subdirectory that contains the files needed to run the script without Python
+import os
+from typing import Dict
 
 from cx_Freeze import Executable, setup
+
+here = os.path.abspath(os.path.dirname(__file__))
 
 # Dependencies fine tuning
 build_exe_options = {
@@ -37,13 +41,16 @@ build_exe_options = {
     ]
 }
 
+about: Dict[str, str] = {}
+with open(os.path.join(here, "minenbt", "__version__.py"), "r", encoding="utf-8") as f:
+    exec(f.read(), about)
 
 setup(
-    name="minenbt",
-    version="0.1",
-    description="lib and cli script to handle Minecraft savefiles",
-    author="timendum",
-    url="https://github.com/timendum/minenbt/",
+    name=about["__title__"],
+    version=about["__version__"],
+    description=about["__description__"],
+    author=about["__author__"],
+    url=about["__url__"],
     packages=["minenbt"],
     executables=[Executable("minenbt/__main__.py", targetName="minenbt")],
     options={"build_exe": build_exe_options},
