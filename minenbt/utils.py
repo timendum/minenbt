@@ -63,11 +63,21 @@ def near_chunks(x, z, distance) -> List[Coord]:
     srx, srz = start.region()
     start_chunk = Coord.compose(start.region(), start.chunk(), 0)
     results = []
-    region_range = floor(distance / 512) + 1
-    for rx in range(-region_range, region_range + 1):
-        for rz in range(-region_range, region_range + 1):
-            for cx in range(0, 16):
-                for cz in range(0, 16):
+    xregion_range = floor(distance / 512)
+    zregion_range = xregion_range
+    # distance from borders
+    dx = x % 512
+    if min(abs(dx - 512), dx) < distance % 512:
+        xregion_range += 1
+    dz = z % 512
+    if min(abs(dz - 512), dz) < distance % 512:
+        zregion_range += 1
+    # iterate every regions in range
+    for rx in range(-xregion_range, xregion_range + 1):
+        for rz in range(-zregion_range, zregion_range + 1):
+            # iterate every chunk in regions
+            for cx in range(0, 33):
+                for cz in range(0, 33):
                     point = Coord.compose((rx + srx, rz + srz), (cx, cz), 0)
                     results.append((point, start_chunk.distance(point)))
     results = sorted(results, key=lambda k: k[1])
