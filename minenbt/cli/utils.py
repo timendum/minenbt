@@ -89,8 +89,7 @@ def get_pos(
         return center
     save_dimension = dimension_player(save_folder)
     if save_dimension and dimension and save_dimension != dimension:
-        print("Center not provided, but provided dimension is different from player dimension")
-        exit(97)
+        return None
     pos = pos_player(save_folder)
     if not pos:
         return None
