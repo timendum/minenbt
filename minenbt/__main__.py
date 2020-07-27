@@ -5,7 +5,7 @@ from minenbt import SaveFolder
 
 
 def __add_dimension(parser):
-    parser.add_argument("-d", "--dimension", choices=["overworld", "nether", "end"])
+    parser.add_argument("-d", "--dimension", choices=["overworld", "the_nether", "the_end"])
 
 
 def __add_uuid(parser):

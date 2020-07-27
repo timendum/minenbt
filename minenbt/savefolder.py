@@ -115,11 +115,11 @@ class SaveFolder:
         """Return the Overworld dimension."""
         return Dimension(self._folder.absolute())
 
-    def nether(self) -> Dimension:
+    def the_nether(self) -> Dimension:
         """Return the Nether dimension."""
         return Dimension((self._folder / "DIM-1").absolute())
 
-    def end(self) -> Dimension:
+    def the_end(self) -> Dimension:
         """Return the End dimension."""
         return Dimension((self._folder / "DIM1").absolute())
 

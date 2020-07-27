@@ -48,7 +48,7 @@ def dimension_player(save_folder: SaveFolder) -> Optional[str]:
     nbt_dimension = dat.root["Data"]["Player"]["Dimension"]
     if isinstance(nbt_dimension, int):
         # Until 1.15.2
-        return {-1: "nether", 0: "overworld", 1: "end"}[nbt_dimension]
+        return {-1: "the_nether", 0: "overworld", 1: "the_end"}[nbt_dimension]
     # From 1.16
     return nbt_dimension.split(":")[1]
 
