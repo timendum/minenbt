@@ -61,7 +61,6 @@ def near_chunks(x, z, distance) -> List[Coord]:
     Every returned Coord has a distance from `(x,z)` lesser than `distance`."""
     start = Coord(x, 0, z)
     srx, srz = start.region()
-    start_chunk = Coord.compose(start.region(), start.chunk(), 0)
     results = []
     xregion_range = floor(distance / 512)
     zregion_range = xregion_range
@@ -79,7 +78,7 @@ def near_chunks(x, z, distance) -> List[Coord]:
             for cx in range(0, 33):
                 for cz in range(0, 33):
                     point = Coord.compose((rx + srx, rz + srz), (cx, cz), 0)
-                    results.append((point, start_chunk.distance(point)))
+                    results.append((point, start.distance(point)))
     results = sorted(results, key=lambda k: k[1])
     nbisect = bisect.bisect_right([r[1] for r in results], distance)
     results = results[:nbisect]
