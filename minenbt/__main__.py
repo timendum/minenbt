@@ -82,6 +82,11 @@ def main():
     repair_parser = subparsers.add_parser("repair", help=cli.repair.__doc__.strip())
     __add_uuid(repair_parser)
     repair_parser.set_defaults(func=cli.repair.main)
+    # slime
+    block_parser = subparsers.add_parser("slime", help=cli.slime.__doc__.strip())
+    block_parser.set_defaults(func=cli.slime.main)
+    __add_dimension(block_parser)
+    __add_center_distance(block_parser)
     # dumpr
     dumpr_parser = subparsers.add_parser("dumpr", help=cli.dumpr.__doc__.strip())
     dumpr_parser.set_defaults(func=cli.dumpr.main)

@@ -53,6 +53,8 @@ Prints all structures
 Find blocks by id
 - `repair`  
 Repair all items in the single player's inventory.
+- `slime`  
+Find slime chunks
 
 ### Examples
 
