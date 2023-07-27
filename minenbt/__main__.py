@@ -16,7 +16,7 @@ def __add_center(parser):
     parser.add_argument(
         "-c",
         "--center",
-        type=cli.utils.Center,
+        type=cli.utils.center,
         help="Print first results nearer from this position (Default=single player position)",
     )
 

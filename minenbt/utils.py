@@ -1,9 +1,11 @@
 import bisect
-from math import floor, pow as mpow, sqrt
-from typing import List, NamedTuple, Tuple
+from math import floor, sqrt
+from math import pow as mpow
+from typing import NamedTuple
 from uuid import UUID
 
 import numpy as np
+from amulet_nbt import CompoundTag, IntArrayTag
 
 __all__ = ["Coord", "near_regions", "near_chunks", "parse_uuid"]
 
@@ -13,20 +15,20 @@ class Coord(NamedTuple):
     y: int
     z: int
 
-    def region(self) -> Tuple[int, int]:
+    def region(self) -> tuple[int, int]:
         return self.x >> 9, self.z >> 9
 
-    def chunk(self) -> Tuple[int, int]:
+    def chunk(self) -> tuple[int, int]:
         return self.x >> 4 & 31, self.z >> 4 & 31
 
     def section(self) -> int:
         return self.y >> 4
 
-    def block(self) -> Tuple[int, int, int]:
+    def block(self) -> tuple[int, int, int]:
         return self.x & 15, self.y & 15, self.z & 15
 
     @classmethod
-    def compose(cls, region=[0, 0], chunk=[0, 0], section=0, block=[0, 0, 0]) -> "Coord":
+    def compose(cls, region=(0, 0), chunk=(0, 0), section=0, block=(0, 0, 0)) -> "Coord":
         x = (region[0] << 9) + (chunk[0] << 4) + block[0]
         y = (section << 4) + block[1]
         z = (region[1] << 9) + (chunk[1] << 4) + block[2]
@@ -39,7 +41,7 @@ class Coord(NamedTuple):
         return "({self.x}, {self.y}, {self.z})".format(self=self)
 
 
-def near_regions(x, z, distance) -> List[Tuple[int, int]]:
+def near_regions(x, z, distance) -> list[tuple[int, int]]:
     """Returns a list of (region x, region z) of region
     in a square of side distance*2
     centered on (x, z).
@@ -56,7 +58,7 @@ def near_regions(x, z, distance) -> List[Tuple[int, int]]:
     return regions
 
 
-def near_chunks(x, z, distance) -> List[Coord]:
+def near_chunks(x, z, distance) -> list[Coord]:
     """Return an list of Coord, from nearest to farthest, one Coord for every chunck.
     Every returned Coord has a distance from `(x,z)` lesser than `distance`."""
     start = Coord(x, 0, z)
@@ -85,18 +87,15 @@ def near_chunks(x, z, distance) -> List[Coord]:
     return [r[0] for r in results]
 
 
-def parse_uuid(compound, prefix="UUID") -> UUID:
+def parse_uuid(compound: CompoundTag, prefix="UUID") -> UUID:
     """Return an uuid.UUID from a compund tag.
 
     See https://minecraft.gamepedia.com/UUID"""
-    if prefix + "Most" in compound:
-        # Until MC 1.15.2
-        ints = [compound[prefix + "Most"], compound[prefix + "Least"]]
-        uints = [np.int64(i).astype(np.uint64).item() for i in ints]
-        return UUID(int=((uints[0] << 64) + uints[1]))
     # From MC 1.16
     ints = compound[prefix]
+    if not isinstance(ints, IntArrayTag):
+        raise ValueError("Incorrect tag")
     # convert so unsigned
-    uints = [np.int32(i).astype(np.uint32).item() for i in ints]
+    uints = [np.int32(i).astype(np.uint32).item() for i in ints.np_array]
     # build 128 bit integer
     return UUID(int=(uints[0] << 96) + (uints[1] << 64) + (uints[2] << 32) + uints[3])

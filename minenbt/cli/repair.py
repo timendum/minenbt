@@ -2,28 +2,25 @@
 Repair all items in the single player's inventory.
 """
 
-import nbtlib
+from typing import TYPE_CHECKING
 
-import minenbt
+from amulet_nbt import IntTag
 
-from .utils import backup_write, get_player
+if TYPE_CHECKING:
+    import minenbt
+
+from .utils import backup_save, find_player, get_player_file
 
 
-def main(save_folder: minenbt.SaveFolder, uuid) -> int:
-    level_dat, playerdata = get_player(save_folder, uuid)
-    if level_dat:
-        inventory = level_dat.root["Data"]["Player"]["Inventory"]
-    else:
-        inventory = playerdata.root["Inventory"]
+def main(save_folder: "minenbt.SaveFolder", uuid) -> int:
+    level_dat, playerdata = get_player_file(save_folder, uuid)
+    inventory = find_player(level_dat, playerdata)["Inventory"]
     for item in inventory:
         if "tag" not in item:
             continue
         if "Damage" not in item["tag"]:
             continue
-        item["tag"]["Damage"] = min(item["tag"]["Damage"], nbtlib.Int(1))
-    if level_dat:
-        new_file = backup_write(level_dat)
-    else:
-        new_file = backup_write(playerdata)
-    print("Backup at {}".format(new_file))
+        item["tag"]["Damage"] = IntTag(min(item["tag"]["Damage"].py_int, 1))
+    new_file = backup_save(level_dat, playerdata)
+    print(f"Backup at {new_file}")
     return 0

@@ -96,18 +96,18 @@ def main(save_folder: minenbt.SaveFolder, dimension) -> int:
     world = get_world(save_folder, dimension)
     biomes: typing.Counter[int] = Counter()
     print("Reading world...", end="\r")
-    lregions = len(list(world.regions()))
+    lregions = len(list(world.regions.all()))
     i = 0
-    for rx, ry, region in world.regions():
+    for _rx, _ry, region in world.regions.all():
         i += 1
-        print("Reading world... {:0>3}/{}".format(i, lregions), end="\r")
+        print(f"Reading world... {i:0>3}/{lregions}", end="\r")
         for _, _, chunk in region.chunks():
             if chunk:
-                biomes.update(chunk["Level"].get("Biomes"))
+                biomes.update([p.py_str for s in chunk.sections() for p in s["biomes"]['palette'].py_list])
 
     print("Biomes:                         \n")
     # must be long enought to overwrite last line
-    swidth = max(len(s) for s in BIOMES.values())
+    swidth = max(len(s) for s in biomes) + 1
     for biome, value in biomes.most_common():
-        print("{0:<{swidth}}: {1:>10,d}".format(BIOMES[biome], value, swidth=swidth))
+        print("{0:<{swidth}}: {1:>10,d}".format(biome, value, swidth=swidth))
     return 0

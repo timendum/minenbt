@@ -1,27 +1,39 @@
 import datetime as dt
+import json
 from pathlib import Path
 from shutil import move
 from sys import exit
-from typing import Iterator, Optional, Tuple
+from typing import TYPE_CHECKING
 
-from nbtlib import Compound, File as ntbFile
+from amulet_nbt import AbstractBaseTag
+from numpy import ndarray
 
-from minenbt import Dimension, SaveFolder
-from minenbt.utils import Coord, near_chunks
+from minenbt.file_formats import NbtFile
+from minenbt.utils import Coord, near_chunks, parse_uuid
+
+if TYPE_CHECKING:
+    from collections.abc import Iterator
+
+    from amulet_nbt import CompoundTag
+
+    from minenbt import AnvilFolder, Chunk, Dimension, SaveFolder
 
 __all__ = [
     "iterate_chunks",
     "get_world",
-    "Center",
+    "center",
     "get_pos",
     "dimension_player",
     "pos_player",
-    "get_player",
-    "backup_write",
+    "get_player_file",
+    "find_player",
+    "backup_save",
+    "json_print",
+    "json_pprint"
 ]
 
 
-def Center(s: str) -> Coord:
+def center(s: str) -> Coord:
     try:
         coords = [int(c.strip()) for c in s.split(",")]
     except ValueError:
@@ -34,48 +46,45 @@ def Center(s: str) -> Coord:
         raise ValueError("Center should be x,z or x,y,z")
 
 
-def pos_player(save_folder: SaveFolder) -> Optional[Tuple[float, float, float]]:
+def pos_player(save_folder: "SaveFolder") -> tuple[float, float, float] | None:
     dat = save_folder.level_dat()
-    if "Player" not in dat.root["Data"]:
+    if "Player" not in dat.tag.compound["Data"]:
         return None
-    return dat.root["Data"]["Player"]["Pos"]
+    return [t.py_float for t in dat.tag.compound["Data"]["Player"]["Pos"].py_list]
 
 
-def dimension_player(save_folder: SaveFolder) -> Optional[str]:
+def dimension_player(save_folder: "SaveFolder") -> str | None:
     dat = save_folder.level_dat()
-    if "Player" not in dat.root["Data"]:
+    if "Player" not in dat.tag.compound["Data"]:
         return None
-    nbt_dimension = dat.root["Data"]["Player"]["Dimension"]
-    if isinstance(nbt_dimension, int):
-        # Until 1.15.2
-        return {-1: "the_nether", 0: "overworld", 1: "the_end"}[nbt_dimension]
-    # From 1.16
-    return nbt_dimension.split(":")[1]
+    nbt_dimension = dat.tag.compound["Data"]["Player"]["Dimension"]
+    return nbt_dimension.py_str.split(":")[1]
 
 
 def iterate_chunks(
-    world: Dimension, center: Optional[Tuple[int, int, int]], distance: Optional[int]
-) -> Iterator[Tuple[Coord, Compound]]:
+    world: "AnvilFolder", center: tuple[int, int, int] | None, distance: int | None
+) -> "Iterator[tuple[Coord, Chunk]]":
+    chunk = None  # type: None | Chunk
     if not distance or not center:
-        for rx, rz, region in world.regions():
+        for rx, rz, region in world.all():
             for cx, cz, chunk in region.chunks():
                 yield Coord.compose((rx, rz), (cx, cz)), chunk
     else:
         for coord in near_chunks(center[0], center[2], distance):
             try:
-                chunk = world.region(*coord.region()).chunk(*coord.chunk())
+                chunk = world.single(*coord.region()).chunk(*coord.chunk())
                 if chunk:
                     yield coord, chunk
             except KeyError:
                 pass
 
 
-def get_world(save_folder: SaveFolder, dimension: Optional[str]) -> Dimension:
     """save folder + dimension name -> World"""
+def get_world(save_folder: "SaveFolder", dimension: str | None) -> "Dimension":
     if not dimension:
         dimension = dimension_player(save_folder)
         if dimension:
-            print("Player found in {}".format(dimension.title()))
+            print(f"Player found in {dimension.title()}")
     if not dimension:
         print("Single player info not found, please specify --dimension")
         exit(99)
@@ -83,8 +92,8 @@ def get_world(save_folder: SaveFolder, dimension: Optional[str]) -> Dimension:
 
 
 def get_pos(
-    save_folder: SaveFolder, dimension: Optional[str], center=Optional[Coord]
-) -> Optional[Tuple[int, int, int]]:
+    save_folder: "SaveFolder", dimension: str | None, center=Coord | None
+) -> tuple[int, int, int] | None:
     if center:
         return center
     save_dimension = dimension_player(save_folder)
@@ -97,32 +106,75 @@ def get_pos(
     return (int(pos[0]), int(pos[1]), int(pos[2]))
 
 
-def get_player(
-    save_folder: SaveFolder, uuid: Optional[str]
-) -> Tuple[Optional[Compound], Optional[Compound]]:
+def get_player_file(
+    save_folder: "SaveFolder", uuid: str | None
+) -> "tuple[NbtFile | None, NbtFile | None]":
     """Get a player data.
 
-    Return (level.dat file, playerdata file).  
-    If uuid is None or uuid == Single player, return level.dat.  
+    Return (level.dat file, playerdata file).
+    If uuid is None or uuid == Single player, return level.dat.
     Else return playerdata file."""
+    dat = save_folder.level_dat()
     if not uuid:
-        dat = save_folder.level_dat()
-        if "Player" not in dat.root["Data"]:
+        if "Player" not in dat.tag.compound["Data"]:
             print("The Save is not for single player.")
             exit(96)
         return dat, None
-    player = save_folder.player(uuid)
-    if hasattr(player, "filename"):
-        # ntblib.File, so from playerdata
-        return None, player
-    return save_folder.level_dat(), None
+    try:
+        sp_uuid = parse_uuid(dat.tag.compound["Data"]["Player"], "UUID")
+        if uuid == str(sp_uuid):
+            return dat, None
+    except:
+        pass
+    return None, NbtFile(save_folder._folder / "playerdata" / f"{uuid}.dat")
 
 
-def backup_write(nbtfile: ntbFile) -> Path:
+def find_player(level_dat: "None | NbtFile", playerdata: "None | NbtFile") -> "CompoundTag":
+    if level_dat:
+        return level_dat.tag.compound["Data"]["Player"]
+    if playerdata:
+        return playerdata.tag.compound
+    raise ValueError("No valid player found")
+
+
+def backup_save(level_dat: "None | NbtFile", playerdata: "None | NbtFile") -> Path:
     """Backup and save a ntblib.File."""
+    nbtfile = level_dat or playerdata
+    if not nbtfile:
+        raise ValueError("No valid file")
     path = Path(nbtfile.filename)
     timestamp = dt.datetime.now().strftime("%Y-%m-%d_%H-%M-%S-%f")
     new_path = Path(str(path.absolute()) + "." + timestamp)
     move(path, new_path)
     nbtfile.save()
     return new_path
+
+
+def plain_print(o: "CompoundTag"):
+    if o:
+        print(o.to_snbt())
+
+
+def ident_print(o: "CompoundTag"):
+    if o:
+        print(o.to_snbt(indent=2))
+
+
+class NbtJSONEncoder(json.JSONEncoder):
+    def default(self, o):
+        if isinstance(o, AbstractBaseTag):
+            for p in ("py_dict", "py_list", "py_int", "py_float", "py_str", "np_array"):
+                try:
+                    return getattr(o, p)
+                except AttributeError:
+                    pass
+        if isinstance(o, ndarray):
+            return o.tolist()
+        return json.JSONEncoder.default(self, o)
+
+
+def json_print(o):
+    return print(json.dumps(o, cls=NbtJSONEncoder))
+
+def json_pprint(o):
+    return print(json.dumps(o, cls=NbtJSONEncoder,indent="  "))

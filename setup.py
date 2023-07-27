@@ -40,13 +40,13 @@ build_exe_options = {
 
 setup(
     name="minenbt",
-    version="0.1",
+    version="0.2",
     description="lib and cli script to handle Minecraft savefiles",
     author="timendum",
     url="https://github.com/timendum/minenbt/",
     packages=["minenbt"],
     executables=[Executable("minenbt/__main__.py", targetName="minenbt")],
     options={"build_exe": build_exe_options},
-    install_requires=["nbtlib", "numpy"],
+    install_requires=["mulet-nbt", "numpy"],
     license="GNU General Public License v3.0",
 )

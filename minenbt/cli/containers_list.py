@@ -3,17 +3,20 @@ Prints all containers (chest, barrel, minecart with chest).
 """
 from collections import Counter
 
+from amulet_nbt import ListTag
+
 from .utils import get_pos, get_world, iterate_chunks
 
 
 def print_entry(e, empty, only_loot):
     if "Pos" in e:
         location = "{:s} at ({:0.0f}, {:0.0f}, {:0.0f})".format(
-            e["id"].replace("minecraft:", "").replace("_", " ").title(), *e["Pos"]
+            e["id"].py_str.replace("minecraft:", "").replace("_", " ").title(),
+            *[v.py_float for v in e["Pos"].py_list]
         )
     else:
         location = "{:s} at ({x:0.0f}, {y:0.0f}, {z:0.0f})".format(
-            e["id"].replace("minecraft:", "").replace("_", " ").title(), **e
+            e["id"].py_str.replace("minecraft:", "").replace("_", " ").title(), **e
         )
     if "Items" in e and not only_loot:
         content = Counter()
@@ -30,7 +33,11 @@ def print_entry(e, empty, only_loot):
         print(location)
         print(
             "- Loot from {} table".format(
-                e["LootTable"].split("/")[-1].replace("minecraft:", "").replace("_", " ").title()
+                e["LootTable"]
+                .py_str.split("/")[-1]
+                .replace("minecraft:", "")
+                .replace("_", " ")
+                .title()
             )
         )
 
@@ -39,8 +46,10 @@ def main(save_folder, dimension, center, distance, empty, only_loot) -> int:
     world = get_world(save_folder, dimension)
     pos = get_pos(save_folder, dimension, center)
     print("\nEntities:")
-    for _, chunk in iterate_chunks(world, pos, distance):
-        for e in chunk["Level"].get("TileEntities") + chunk["Level"].get("Entities"):
+    for _, chunk in iterate_chunks(world.entities, pos, distance):
+        for e in (
+            chunk.get("TileEntities", ListTag()).py_list + chunk.get("Entities", ListTag()).py_list
+        ):
             if "Items" in e or "LootTable" in e:
                 print_entry(e, empty, only_loot)
     return 0
