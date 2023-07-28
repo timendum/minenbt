@@ -2,38 +2,35 @@
 Add one item to the single player inventory.
 """
 
-import nbtlib
+from typing import TYPE_CHECKING
 
-import minenbt
+import amulet_nbt
 
-from .utils import backup_write, get_player
+if TYPE_CHECKING:
+    import minenbt
+
+from .utils import backup_save, find_player, get_player_file
 
 # From https://minecraft.gamepedia.com/File:Items_slot_number.png
 _SLOTS = set(range(9, 36))
 
 
-def main(save_folder: minenbt.SaveFolder, item: str, count=1, uuid=None) -> int:
-    level_dat, playerdata = get_player(save_folder, uuid)
-    if level_dat:
-        inventory = level_dat.root["Data"]["Player"]["Inventory"]
-    else:
-        inventory = playerdata.root["Inventory"]
-    occupied_slots = set([int(i["Slot"]) for i in inventory])
+def main(save_folder: "minenbt.SaveFolder", item: str, count=1, uuid=None) -> int:
+    level_dat, playerdata = get_player_file(save_folder, uuid)
+    inventory = find_player(level_dat, playerdata)["Inventory"]
+    occupied_slots = set([i["Slot"].py_int for i in inventory])
     free_slots = _SLOTS - occupied_slots
     if not free_slots:
         print("No slot available in inventory")
         return 21
-    new_slot = nbtlib.Compound(
+    new_slot = amulet_nbt.CompoundTag(
         {
-            "Slot": nbtlib.Byte(min(free_slots)),
-            "id": nbtlib.String(item),
-            "Count": nbtlib.Byte(count),
+            "Slot": amulet_nbt.ByteTag(min(free_slots)),
+            "id": amulet_nbt.StringTag(item),
+            "Count": amulet_nbt.ByteTag(count),
         }
     )
     inventory.append(new_slot)
-    if level_dat:
-        new_file = backup_write(level_dat)
-    else:
-        new_file = backup_write(playerdata)
-    print("Backup at {}".format(new_file))
+    new_file = backup_save(level_dat, playerdata)
+    print(f"Backup at {new_file}")
     return 0
