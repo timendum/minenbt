@@ -16,11 +16,10 @@ build_exe_options = {
         "html",
         "http",
         "multiprocessing",
+        "mypy",
         "numpy.distutils",
         "numpy.doc",
-        "numpy.fft",
         "numpy.matrixlib.tests",
-        "numpy.polynomial",
         "numpy.testing",
         "numpy.tests",
         "pydoc",
@@ -34,6 +33,11 @@ build_exe_options = {
         "_lzma",
         "_socket",
         "_ssl",
+    ],
+    "includes": [
+        "encodings",
+        "mutf8",
+        "secrets",
     ]
 }
 
@@ -45,7 +49,7 @@ setup(
     author="timendum",
     url="https://github.com/timendum/minenbt/",
     packages=["minenbt"],
-    executables=[Executable("minenbt/__main__.py", targetName="minenbt")],
+    executables=[Executable("minenbt/__main__.py", target_name="minenbt")],
     options={"build_exe": build_exe_options},
     install_requires=["mulet-nbt", "numpy"],
     license="GNU General Public License v3.0",
