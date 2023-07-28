@@ -1,13 +1,17 @@
 """
 Find blocks by id (es: minecraft:diamond_ore).
 """
-import minenbt
+from typing import TYPE_CHECKING
+
 from minenbt.utils import Coord
 
 from .utils import get_pos, get_world, iterate_chunks
 
+if TYPE_CHECKING:
+    from minenbt import SaveFolder
 
-def main(save_folder: minenbt.SaveFolder, dimension, center, distance, block_id) -> int:
+
+def main(save_folder: "SaveFolder", dimension, center, distance, block_id) -> int:
     world = get_world(save_folder, dimension)
     pos = get_pos(save_folder, dimension, center)
     cpos = None

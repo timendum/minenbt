@@ -4,7 +4,6 @@ Prints all mobs in the Overworld (Entities with Brain)
 
 from typing import TYPE_CHECKING
 
-
 if TYPE_CHECKING:
 
     from minenbt import SaveFolder

@@ -1,10 +1,11 @@
 """
 Count the number of biomes in a dimension.
 """
-import typing
 from collections import Counter
+from typing import TYPE_CHECKING
 
-import minenbt
+if TYPE_CHECKING:
+    from minenbt import SaveFolder
 
 from .utils import get_world
 
@@ -92,9 +93,9 @@ BIOMES = {
 }
 
 
-def main(save_folder: minenbt.SaveFolder, dimension) -> int:
+def main(save_folder: "SaveFolder", dimension) -> int:
     world = get_world(save_folder, dimension)
-    biomes: typing.Counter[int] = Counter()
+    biomes: Counter[int] = Counter()
     print("Reading world...", end="\r")
     lregions = len(list(world.regions.all()))
     i = 0
@@ -103,7 +104,9 @@ def main(save_folder: minenbt.SaveFolder, dimension) -> int:
         print(f"Reading world... {i:0>3}/{lregions}", end="\r")
         for _, _, chunk in region.chunks():
             if chunk:
-                biomes.update([p.py_str for s in chunk.sections() for p in s["biomes"]['palette'].py_list])
+                biomes.update(
+                    [p.py_str for s in chunk.sections() for p in s["biomes"]["palette"].py_list]
+                )
 
     print("Biomes:                         \n")
     # must be long enought to overwrite last line

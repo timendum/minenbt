@@ -2,17 +2,22 @@
 Prints general information about the world.
 """
 
-import minenbt
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from minenbt import SaveFolder
 
 from .utils import dimension_player, pos_player
 
 
-def main(save_folder: minenbt.SaveFolder) -> int:
+def main(save_folder: "SaveFolder") -> int:
     data = save_folder.level_dat().tag.compound["Data"]
     if "generatorName" in data:
         # Until MC 1.15.2
         print("World type: {}".format(data["generatorName"].replace("_", " ").title()))
-    game_type = {0: "Survival", 1: "Creative", 2: "Adventure", 3: "Spectator"}[data["GameType"].py_int]
+    game_type = {0: "Survival", 1: "Creative", 2: "Adventure", 3: "Spectator"}[
+        data["GameType"].py_int
+    ]
     print(f"Game type: {game_type}")
     difficulty = {0: "Peaceful", 1: "Easy", 2: "Normal", 3: "Hard"}[data["Difficulty"].py_int]
     print(f"Difficulty: {difficulty}")
