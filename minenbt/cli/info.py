@@ -11,7 +11,7 @@ from .utils import dimension_player, pos_player
 
 
 def main(save_folder: "SaveFolder") -> int:
-    data = save_folder.level_dat().tag.compound["Data"]
+    data = save_folder.level_dat().compound["Data"]
     if "generatorName" in data:
         # Until MC 1.15.2
         print("World type: {}".format(data["generatorName"].replace("_", " ").title()))

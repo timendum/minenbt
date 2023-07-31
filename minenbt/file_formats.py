@@ -28,6 +28,9 @@ class NbtFile:
     def save(self) -> None:
         self.tag.save_to(self.filename)
 
+    @property
+    def compound(self) -> CompoundTag:
+        return self.tag.compound
 
 class _Metadata(namedtuple("_Metadata", ("offset", "timestamp"))):
     """A chunk metadata"""

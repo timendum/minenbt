@@ -47,7 +47,7 @@ def check_chunk(seed, x, z):
 def main(save_folder: "minenbt.SaveFolder", dimension, center, distance) -> int:
     world = get_world(save_folder, dimension)
     pos = get_pos(save_folder, dimension, center)
-    data = save_folder.level_dat().tag.compound["Data"]
+    data = save_folder.level_dat().compound["Data"]
     seed = data["WorldGenSettings"]["seed"]
     cpos = None
     if pos:

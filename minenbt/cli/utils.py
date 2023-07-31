@@ -48,16 +48,16 @@ def center(s: str) -> Coord:
 
 def pos_player(save_folder: "SaveFolder") -> tuple[float, float, float] | None:
     dat = save_folder.level_dat()
-    if "Player" not in dat.tag.compound["Data"]:
+    if "Player" not in dat.compound["Data"]:
         return None
-    return [t.py_float for t in dat.tag.compound["Data"]["Player"]["Pos"].py_list]
+    return [t.py_float for t in dat.compound["Data"]["Player"]["Pos"].py_list]
 
 
 def dimension_player(save_folder: "SaveFolder") -> str | None:
     dat = save_folder.level_dat()
-    if "Player" not in dat.tag.compound["Data"]:
+    if "Player" not in dat.compound["Data"]:
         return None
-    nbt_dimension = dat.tag.compound["Data"]["Player"]["Dimension"]
+    nbt_dimension = dat.compound["Data"]["Player"]["Dimension"]
     return nbt_dimension.py_str.split(":")[1]
 
 
@@ -116,12 +116,12 @@ def get_player_file(
     Else return playerdata file."""
     dat = save_folder.level_dat()
     if not uuid:
-        if "Player" not in dat.tag.compound["Data"]:
+        if "Player" not in dat.compound["Data"]:
             print("The Save is not for single player.")
             exit(96)
         return dat, None
     try:
-        sp_uuid = parse_uuid(dat.tag.compound["Data"]["Player"], "UUID")
+        sp_uuid = parse_uuid(dat.compound["Data"]["Player"], "UUID")
         if uuid == str(sp_uuid):
             return dat, None
     except:
@@ -131,9 +131,9 @@ def get_player_file(
 
 def find_player(level_dat: "None | NbtFile", playerdata: "None | NbtFile") -> "CompoundTag":
     if level_dat:
-        return level_dat.tag.compound["Data"]["Player"]
+        return level_dat.compound["Data"]["Player"]
     if playerdata:
-        return playerdata.tag.compound
+        return playerdata.compound
     raise ValueError("No valid player found")
 
 

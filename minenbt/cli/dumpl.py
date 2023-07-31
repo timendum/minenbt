@@ -23,7 +23,7 @@ def main(save_folder: "SaveFolder", etype, uuid, pretty_print) -> int:
     if etype == "player":
         level_dat, playerdata = get_player_file(save_folder, uuid)
         if level_dat:
-            player = level_dat.tag.compound["Data"]["Player"]
+            player = level_dat.compound["Data"]["Player"]
         else:
             player = playerdata.tag
         pprint(player)
@@ -31,7 +31,7 @@ def main(save_folder: "SaveFolder", etype, uuid, pretty_print) -> int:
     if etype == "inventory":
         level_dat, playerdata = get_player_file(save_folder, uuid)
         if level_dat:
-            inventory = level_dat.tag.compound["Data"]["Player"]["Inventory"]
+            inventory = level_dat.compound["Data"]["Player"]["Inventory"]
         else:
             inventory = playerdata.tag["Inventory"]
         pprint(inventory)
