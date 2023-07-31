@@ -11,7 +11,7 @@ if TYPE_CHECKING:
 
 from .utils import backup_save, find_player, get_player_file
 
-# From https://minecraft.gamepedia.com/File:Items_slot_number.png
+# From https://minecraft.fandom.com/File:Items_slot_number.png
 _SLOTS = set(range(9, 36))
 
 

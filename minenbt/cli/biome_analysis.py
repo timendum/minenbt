@@ -9,7 +9,7 @@ if TYPE_CHECKING:
 
 from .utils import get_world
 
-# https://minecraft.gamepedia.com/Java_Edition_data_values#Biomes
+# https://minecraft.fandom.com/Java_Edition_data_values#Biomes
 BIOMES = {
     0: "Ocean",
     1: "Plains",

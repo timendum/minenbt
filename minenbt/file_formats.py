@@ -111,12 +111,12 @@ class Section(CompoundTag):
 class Chunk(CompoundTag):
     """Chunks store the terrain and entities within a 16×384×16 area.
 
-    https://minecraft.gamepedia.com/Chunk_format"""
+    https://minecraft.fandom.com/Chunk_format"""
 
     def section(self, i: int) -> Section | None:
         """Return a vertical section of the chunk, if available"""
         if self["DataVersion"].py_int >= 2529:
-            # https://minecraft.gamepedia.com/Java_Edition_20w17a
+            # https://minecraft.fandom.com/Java_Edition_20w17a
             return Section(self["sections"][i + 1])
         raise ValueError("DataVersion {} not supported".format(self["DataVersion"]))
 

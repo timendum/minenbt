@@ -65,11 +65,22 @@ class Dimension:
         self.entities = AnvilFolder.from_folder(self._folder, "entities")
         self.pois = AnvilFolder.from_folder(self._folder, "poi")
 
-    def raid(self) -> NbtFile:
-        """Return raid information as an AnvilFile."""
+    def raid(self) -> "Iterable[NbtFile]":
+        """Return raid information as an NbtFile."""
         for mcafile in (self._folder / "data").glob("raid*.dat"):
+            yield NbtFile(mcafile.absolute())
+
+    def maps(self) -> "Iterable[NbtFile]":
+        """Return all maps as `NbtFile`."""
+        for mcafile in (self._folder / "data").glob("map_*.dat"):
+            yield NbtFile(mcafile.absolute())
+
+    def map(self, id: str) -> NbtFile | None:
+        """Return a specific map by id."""
+        mcafile= self._folder / "data" / ("map_" + id + ".dat")
+        if mcafile.is_file():
             return NbtFile(mcafile.absolute())
-        raise OSError("Raid file not found")
+        return None
 
     def __repr__(self) -> str:
         return f"Dimension('{self._folder.absolute()}')"
@@ -78,7 +89,7 @@ class Dimension:
 class SaveFolder:
     """A Minecraft Save Folder"""
 
-    # https://minecraft.gamepedia.com/Java_Edition_level_format
+    # https://minecraft.fandom.com/Java_Edition_level_format
 
     def __init__(self, folder: str | Path) -> None:
         self._folder = Path(folder)
@@ -87,6 +98,9 @@ class SaveFolder:
         if not self._folder.is_dir():
             raise ValueError(f"Path {folder} is not a folder")
         self.__level_dat: NbtFile | None = None
+        self.__overworld: Dimension | None = None
+        self.__the_nether: Dimension | None = None
+        self.__the_end: Dimension | None = None
 
     def level_dat(self) -> NbtFile:
         """Returns the leve.dat file as a NBT Compound tag."""
@@ -95,7 +109,7 @@ class SaveFolder:
         return self.__level_dat
 
     def __str__(self) -> str:
-        data = self.level_dat().tag.compound["Data"]
+        data = self.level_dat().compound["Data"]
         if isinstance(data, CompoundTag):
             value = data["LevelName"]
             if isinstance(value, StringTag):
@@ -107,15 +121,21 @@ class SaveFolder:
 
     def overworld(self) -> Dimension:
         """Return the Overworld dimension."""
-        return Dimension(self._folder.absolute())
+        if not self.__overworld:
+            self.__overworld = Dimension(self._folder.absolute())
+        return self.__overworld
 
     def the_nether(self) -> Dimension:
         """Return the Nether dimension."""
-        return Dimension((self._folder / "DIM-1").absolute())
+        if not self.__the_nether:
+            self.__the_nether = Dimension((self._folder / "DIM-1").absolute())
+        return self.__the_nether
 
     def the_end(self) -> Dimension:
         """Return the End dimension."""
-        return Dimension((self._folder / "DIM1").absolute())
+        if not self.__the_end:
+            self.__the_end = Dimension((self._folder / "DIM1").absolute())
+        return self.__the_end
 
     def players(self) -> "Iterable[str]":
         """Return a list of player's UUIDs."""
@@ -126,12 +146,12 @@ class SaveFolder:
         dat = self.level_dat()
         sp_uuid = None
         if (
-            dat.tag.compound["Data"]
-            and isinstance(dat.tag.compound["Data"], CompoundTag)
-            and "Player" in dat.tag.compound["Data"]
-            and isinstance(dat.tag.compound["Data"], CompoundTag)
+            dat.compound["Data"]
+            and isinstance(dat.compound["Data"], CompoundTag)
+            and "Player" in dat.compound["Data"]
+            and isinstance(dat.compound["Data"], CompoundTag)
         ):
-            sp_data = dat.tag.compound["Data"]["Player"]
+            sp_data = dat.compound["Data"]["Player"]
             if isinstance(sp_data, CompoundTag):
                 sp_uuid = parse_uuid(sp_data, "UUID")
                 if uuid == str(sp_uuid):
