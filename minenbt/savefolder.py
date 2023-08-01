@@ -70,10 +70,11 @@ class Dimension:
         for mcafile in (self._folder / "data").glob("raid*.dat"):
             yield NbtFile(mcafile.absolute())
 
-    def maps(self) -> "Iterable[NbtFile]":
+    def maps(self) -> "Iterable[tuple[str, NbtFile]]":
         """Return all maps as `NbtFile`."""
         for mcafile in (self._folder / "data").glob("map_*.dat"):
-            yield NbtFile(mcafile.absolute())
+            map_id = mcafile.name.split(".")[0].split("_")[-1]
+            yield map_id, NbtFile(mcafile.absolute())
 
     def map(self, id: str) -> NbtFile | None:
         """Return a specific map by id."""

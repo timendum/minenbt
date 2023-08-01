@@ -10,3 +10,5 @@ from . import repair  # noqa
 from . import slime  # noqa
 from . import structure_list  # noqa
 from . import utils  # noqa
+from . import maps  # noqa
+

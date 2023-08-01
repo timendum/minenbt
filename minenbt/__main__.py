@@ -104,6 +104,18 @@ def main():
     dumpl_parser.add_argument(
         "-p", "--pretty-print", action="store_true", help="Pretty print output."
     )
+    # dumpr
+    map_parser = subparsers.add_parser("maps", help=cli.maps.__doc__.strip())
+    map_parser.set_defaults(func=cli.maps.main)
+    __add_dimension(map_parser)
+    map_parser.add_argument(
+        "-s",
+        "--scale",
+        type=int,
+        help="Print only maps of this scale (-1 = all)",
+        choices=[-1, 0, 1, 2, 3, 4],
+        default=-1,
+    )
     # parse
     args = parser.parse_args()
     if "func" in args:
