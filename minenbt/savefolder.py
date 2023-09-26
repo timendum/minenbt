@@ -90,7 +90,7 @@ class Dimension:
 class SaveFolder:
     """A Minecraft Save Folder"""
 
-    # https://minecraft.fandom.com/Java_Edition_level_format
+    # https://minecraft.wiki/w/Java_Edition_level_format
 
     def __init__(self, folder: str | Path) -> None:
         self._folder = Path(folder)
