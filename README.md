@@ -5,10 +5,10 @@
 
 ## Features
 
-- Parse `level.dat` ([player.dat format](https://minecraft.fandom.com/Player.dat_format)).
-- Parse region file ([anvil format](https://minecraft.fandom.com/Anvil_file_format)) and chunks within the region.
-- Parse `raids.dat` file ([raids format](https://minecraft.fandom.com/Raids.dat_format)).
-- Parse poi file ([anvil format](https://minecraft.fandom.com/Anvil_file_format)).
+- Parse `level.dat` ([player.dat format](https://minecraft.wiki/w/Player.dat_format)).
+- Parse region file ([anvil format](https://minecraft.wiki/w/Anvil_file_format)) and chunks within the region.
+- Parse `raids.dat` file ([raids format](https://minecraft.wiki/w/Raids.dat_format)).
+- Parse poi file ([anvil format](https://minecraft.wiki/w/Anvil_file_format)).
 - Includes examples to quickly perform analysis, listing, etc. (check `cli` folder).
 - Based on [nbtlib](https://github.com/vberlier/nbtlib/) library.
 - Inspired by [twoolie's NBT](https://github.com/twoolie/NBT).

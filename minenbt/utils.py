@@ -90,7 +90,7 @@ def near_chunks(x, z, distance) -> list[Coord]:
 def parse_uuid(compound: CompoundTag, prefix="UUID") -> UUID:
     """Return an uuid.UUID from a compund tag.
 
-    See https://minecraft.fandom.com/UUID"""
+    See https://minecraft.wiki/w/UUID"""
     # From MC 1.16
     ints = compound[prefix]
     if not isinstance(ints, IntArrayTag):
